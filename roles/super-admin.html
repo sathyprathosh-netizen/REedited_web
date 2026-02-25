@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script>
+    (function () {
+        try {
+            var user = JSON.parse(sessionStorage.getItem('cs_user') || localStorage.getItem('cs_user'));
+            var allowed = ['Super Admin'];
+            if (!user || !allowed.includes(user.position)) {
+                window.location.replace('../login.html');
+            }
+        } catch (e) {
+            window.location.replace('../login.html');
+        }
+    })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin Dashboard — CULINA-SUITE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+    :root {
+        --rb-primary: #00d4b4;
+        --rb-accent: #7b61ff;
+        --rb-bg: #0d0f12;
+        --container-padding: 40px;
+    }
+
+    body {
+        background: var(--rb-bg);
+        color: var(--text-primary);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .rb-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .rb-top-bar {
+        height: 75px;
+        background: rgba(26, 30, 46, 0.85);
+        border-bottom: 1px solid var(--border-subtle);
+        backdrop-filter: blur(20px);
+        padding: 0 var(--container-padding);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        gap: 20px;
+    }
+
+    .rb-main {
+        flex: 1;
+        padding: 50px var(--container-padding);
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .rb-header {
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .rb-header h2,
+    .rb-header h1 {
+        font-size: 34px;
+        font-weight: 900;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        letter-spacing: -0.02em;
+    }
+
+    .rb-header p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        line-height: 1.6;
+        max-width: 600px;
+    }
+
+    .highlight {
+        color: var(--rb-primary);
+    }
+
+    .top-bar-inner {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    /* --- PHASE 17: LAYOUT-SAFE ANIMATIONS --- */
+    .rb-card,
+    .course-card,
+    .rb-top-bar,
+    .user-add-panel,
+    .dashboard-grid section {
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow: hidden;
+        animation: nexus-glow-pulse 8s infinite ease-in-out;
+    }
+
+    .rb-top-bar {
+        padding: 0 var(--container-padding);
+    }
+
+    .course-card {
+        padding: 0;
+    }
+
+    .user-add-panel {
+        padding: 30px;
+    }
+
+    .dashboard-grid section {
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow: hidden;
+        animation: nexus-glow-pulse 8s infinite ease-in-out;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-grid .col-main section:first-child,
+    .dashboard-grid .col-side section:first-child,
+    .dashboard-grid .col-logistics section:first-child {
+        min-height: 380px;
+    }
+
+    .dashboard-grid .col-main section:last-child,
+    .dashboard-grid .col-side section:last-child,
+    .dashboard-grid .col-logistics section:last-child {
+        min-height: 520px;
+    }
+
+    .rb-card::after,
+    .course-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, var(--rb-primary), transparent, var(--rb-accent));
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .rb-card:hover::after,
+    .course-card:hover::after {
+        opacity: 0.4;
+    }
+
+    .rb-view {
+        animation: surface-reveal 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        width: 100%;
+    }
+
+    @keyframes nexus-glow-pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 15px rgba(0, 212, 180, 0.05);
+        }
+
+        50% {
+            box-shadow: 0 0 40px rgba(0, 212, 180, 0.15);
+        }
+    }
+
+    @keyframes spectral-sweep {
+        0% {
+            transform: translateX(-150%) skewX(-20deg);
+            opacity: 0;
+        }
+
+        20% {
+            opacity: 0.2;
+        }
+
+        40% {
+            transform: translateX(250%) skewX(-20deg);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateX(250%) skewX(-20deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes surface-reveal {
+        from {
+            opacity: 0;
+            filter: blur(20px);
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+        }
+    }
+
+    .rb-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .rb-stat-grid .rb-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        min-height: 140px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    }
+
+    .rb-btn {
+        background: var(--rb-primary);
+        color: var(--rb-bg);
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .view-btn {
+        opacity: 0.6;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        padding: 8px 16px;
+    }
+
+    .view-btn.active {
+        opacity: 1;
+        color: white !important;
+        border-bottom: 2px solid var(--rb-primary) !important;
+        border-radius: 0;
+    }
+
+    .rb-table-container {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        flex: 1;
+        min-width: 0;
+    }
+
+    .rb-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+
+    .rb-table th {
+        text-align: left;
+        padding: 18px 24px;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 2px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 800;
+    }
+
+    .rb-table td {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .perm-denied {
+        animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+        border-color: #ff4d4d !important;
+    }
+
+    @keyframes shake {
+
+        10%,
+        90% {
+            transform: translate3d(-1px, 0, 0);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translate3d(-4px, 0, 0);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4px, 0, 0);
+        }
+    }
+
+    /* User Management Layout */
+    .user-mgmt-container {
+        display: flex;
+        gap: 30px;
+        position: relative;
+        align-items: flex-start;
+    }
+
+    .user-table-wrapper {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-add-panel {
+        width: 350px;
+        background: rgba(26, 30, 46, 0.95);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 25px;
+        position: sticky;
+        top: 100px;
+        display: none;
+    }
+
+    .user-add-panel.active {
+        display: block;
+        animation: slide-in-right 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    /* Course Grid Layout */
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .course-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .course-image {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .course-content {
+        padding: 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-category {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--rb-primary);
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .course-title {
+        font-size: 19px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: white;
+        line-height: 1.4;
+    }
+
+    .course-meta {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .course-instructor {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .instructor-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--rb-accent);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+    }
+
+    .form-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: white;
+        font-family: inherit;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--rb-primary);
+        box-shadow: 0 0 15px rgba(0, 212, 180, 0.15);
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Dashboard Master Grid Overhaul */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-top: 35px;
+    }
+
+    .col-main,
+    .col-side,
+    .col-logistics {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .health-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 25px;
+    }
+
+    .metric-ring {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .metric-ring::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 4px solid var(--rb-primary);
+        border-bottom-color: transparent;
+        animation: ring-rotate 2s linear infinite;
+    }
+
+    @keyframes ring-rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .timeline-item {
+        padding: 0 0 25px 25px;
+        border-left: 2px solid var(--border-subtle);
+        position: relative;
+    }
+
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--rb-primary);
+        box-shadow: 0 0 12px var(--rb-primary);
+        border: 2px solid var(--rb-bg);
+    }
+
+    .chart-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .chart-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--rb-primary), #00ffcc);
+        border-radius: 4px;
+    }
+
+    .quick-action-btn {
+        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        width: 100%;
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .quick-action-btn:hover {
+        background: rgba(0, 212, 180, 0.12);
+        border-color: var(--rb-primary);
+        color: white;
+        transform: translateX(8px);
+        box-shadow: 0 4px 20px rgba(0, 212, 180, 0.1);
+    }
+
+    .hero__eyebrow {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--rb-primary);
+        font-weight: 800;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    /* RESPONSIVE DESIGN */
+    .nav-brand-container {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 10px;
+    }
+
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .nav-divider {
+        height: 24px;
+        width: 1px;
+        background: var(--border-subtle);
+    }
+
+    .sync-btn {
+        background: rgba(0, 212, 180, 0.1) !important;
+        color: var(--rb-primary) !important;
+        padding: 8px 16px !important;
+        font-size: 10px !important;
+    }
+
+    .logout-btn {
+        background: rgba(255, 77, 77, 0.1) !important;
+        color: #ff4d4d !important;
+        padding: 8px 16px !important;
+        font-size: 10px !important;
+        text-decoration: none !important;
+    }
+
+    @media (max-width: 1280px) {
+        .dashboard-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .col-logistics {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        :root {
+            --container-padding: 30px;
+        }
+
+        .rb-top-bar {
+            padding: 0 30px;
+        }
+
+        .rb-btn.view-btn {
+            font-size: 10px;
+            padding: 6px 12px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .col-logistics {
+            grid-column: span 1;
+            grid-template-columns: 1fr;
+        }
+
+        .user-mgmt-container {
+            flex-direction: column;
+        }
+
+        .user-add-panel {
+            width: 100%;
+            position: static;
+            margin-top: 30px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        :root {
+            --container-padding: 20px;
+        }
+
+        .rb-top-bar {
+            height: auto;
+            padding: 15px 20px;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .rb-top-bar .top-bar-inner {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .nav-brand-container {
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .nav-links {
+            width: 100%;
+            justify-content: flex-start;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-links .rb-btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .nav-actions {
+            width: 100%;
+            justify-content: center;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 15px;
+        }
+
+        .rb-header h1 {
+            font-size: 30px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .rb-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .health-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* --- MODAL STYLES --- */
+    .rb-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .rb-modal.active {
+        display: flex;
+        animation: modal-reveal 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .modal-content {
+        background: #1a1e2e;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        width: 100%;
+        max-width: 550px;
+        padding: 40px;
+        position: relative;
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    @keyframes modal-reveal {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+</style>
+</head>
+
+<body>
+    <div class="rb-layout">
+        <header class="rb-top-bar">
+            <div class="top-bar-inner">
+                <div class="nav-brand-container">
+                    <div class="login-logo" style="margin: 0; opacity: 1;">CULINA<span>-SUITE</span></div>
+                    <nav class="nav-links">
+                        <button onclick="switchView('overview')" class="rb-btn view-btn active" id="btn-overview">◈
+                            Overview</button>
+                        <button onclick="switchView('users')" class="rb-btn view-btn" id="btn-users">👤 User
+                            Management</button>
+                        <button onclick="switchView('courses')" class="rb-btn view-btn" id="btn-courses">📚
+                            Courses</button>
+                        <button onclick="switchView('audit')" class="rb-btn view-btn" id="btn-audit">📋 Logs</button>
+                        <button onclick="switchView('config')" class="rb-btn view-btn" id="btn-config">⚙️
+                            Config</button>
+                    </nav>
+                </div>
+                <div class="nav-actions">
+                    <button onclick="syncLocalData()" class="rb-btn sync-btn">🔄
+                        Sync Sync</button>
+                    <div class="nav-divider"></div>
+                    <a href="../login.html" onclick="sessionStorage.removeItem('cs_user')" class="rb-btn logout-btn">🚪
+                        Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="rb-main">
+            <!-- Overview View -->
+            <div id="view-overview" class="rb-view">
+                <header class="rb-header">
+                    <div class="hero__eyebrow">Super Admin Dashboard</div>
+                    <h1>Academy <span class="highlight">Intelligence Hub</span></h1>
+                    <p>Global monitor for curriculum health and platform enrollment dynamics.</p>
+                </header>
+
+                <div class="rb-stat-grid">
+                    <div class="rb-card">
+                        <div
+                            style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 5px;">
+                            Global Scholars</div>
+                        <div style="font-size: 36px; font-weight: 900; color: white;" id="total-users">0</div>
+                    </div>
+                    <div class="rb-card" onclick="switchView('courses')" style="cursor: pointer;">
+                        <div
+                            style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 5px;">
+                            Active Modules</div>
+                        <div style="font-size: 36px; font-weight: 900; color: white;">
+                            <span id="course-count">0</span>
+                            <span
+                                style="font-size: 16px; color: var(--text-muted); font-weight: 400; margin-left: 5px;">/
+                                <span id="course-limit-display">0</span></span>
+                        </div>
+                    </div>
+                    <div class="rb-card">
+                        <div
+                            style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 5px;">
+                            Completion Rate</div>
+                        <div style="font-size: 36px; font-weight: 900; color: var(--rb-accent);" id="completion-val">84%
+                        </div>
+                    </div>
+                    <div class="rb-card">
+                        <div
+                            style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 5px;">
+                            Protocol Health</div>
+                        <div style="font-size: 36px; font-weight: 900; color: var(--rb-primary);">Optimal</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Lane 1: Platform Performance (col-main) -->
+                    <div class="col-main">
+                        <section class="rb-card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h2>Academic Progress Vector</h2>
+                                <span class="badge"
+                                    style="background: rgba(0,212,180,0.1); color: var(--rb-primary);">Real-time</span>
+                            </div>
+                            <div class="health-grid">
+                                <div style="text-align: center;">
+                                    <div class="metric-ring" style="margin: 0 auto 10px;">
+                                        <span id="enroll-rate" style="font-size: 14px; font-weight: 800;">14%</span>
+                                    </div>
+                                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">
+                                        ADMISSION
+                                        MOMENTUM</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div class="metric-ring"
+                                        style="margin: 0 auto 10px; border-color: rgba(123,97,255,0.1);">
+                                        <span id="grade-avg"
+                                            style="font-size: 14px; font-weight: 800; color: var(--rb-accent);">78%</span>
+                                    </div>
+                                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">
+                                        GRADE AVERAGE</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div class="metric-ring" style="margin: 0 auto 10px;">
+                                        <span id="cert-speed" style="font-size: 14px; font-weight: 800;">12d</span>
+                                    </div>
+                                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">
+                                        CERTIFICATION PACE</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 30px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                                    <span>Knowledge Retention Index</span>
+                                    <span style="color: var(--rb-primary);">+12%</span>
+                                </div>
+                                <div class="chart-bar">
+                                    <div class="chart-fill" style="width: 75%;"></div>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 15px; margin-bottom: 8px;">
+                                    <span>Faculty Engagement Score</span>
+                                    <span style="color: var(--rb-accent);">99.9%</span>
+                                </div>
+                                <div class="chart-bar">
+                                    <div class="chart-fill" style="width: 95%; background: var(--rb-accent);"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="rb-card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3>Governance Protocol</h3>
+                                <div
+                                    style="width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88;">
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Credential Matrix</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">ENCRYPTED
+                                        (RSA-4096)</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Academic Perimeter</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">ACTIVE &
+                                        SHIELDED</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Identity
+                                        Verification</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">MFA
+                                        MANDATORY</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Role Authority</span>
+                                    <span
+                                        style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">TIER-LOCKED</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Asset Validation</span>
+                                    <span
+                                        style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">VERIFIED</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Neural Guard</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">CORE
+                                        ACTIVE</span>
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Compliance Status</span>
+                                    <span
+                                        style="font-size: 12px; font-weight: 700; color: var(--rb-primary);">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Lane 2: Infrastructure & Activity (col-side) -->
+                    <div class="col-side">
+                        <section class="rb-card">
+                            <h2>Global Curriculum Reach</h2>
+                            <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div
+                                    style="padding: 20px; background: rgba(0, 212, 180, 0.05); border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 900; color: var(--rb-primary);"
+                                        id="reach-val">42</div>
+                                    <div
+                                        style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 5px;">
+                                        ACTIVE DISTRICTS</div>
+                                </div>
+                                <div
+                                    style="padding: 20px; background: rgba(123, 97, 255, 0.05); border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 900; color: var(--rb-accent);"
+                                        id="sync-nodes">14</div>
+                                    <div
+                                        style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 5px;">
+                                        LEARNING NODES</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                                    <span>Academic Content Propagation</span>
+                                    <span style="color: var(--rb-primary);">92%</span>
+                                </div>
+                                <div
+                                    style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 92%; height: 100%; background: var(--rb-primary);"></div>
+                                </div>
+                            </div>
+                            <div
+                                style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">Academic Sync
+                                        Protocol</span>
+                                    <span class="badge"
+                                        style="background: rgba(123, 97, 255, 0.1); color: var(--rb-accent); font-size: 10px;">ACTIVE</span>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">Curriculum
+                                    synchronization active across global edge nodes.</div>
+                            </div>
+                        </section>
+
+                        <section class="rb-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3>Real-time Feed</h3>
+                                <span class="badge"
+                                    style="background: rgba(0, 212, 180, 0.1); color: var(--rb-primary);">LIVE</span>
+                            </div>
+                            <div id="dashboard-timeline" style="margin-top: 20px; flex: 1;">
+                                <!-- Feed populated by JS -->
+                            </div>
+                            <button class="rb-btn"
+                                style="width: 100%; margin-top: 15px; background: rgba(255,255,255,0.05); color: white;"
+                                onclick="switchView('audit')">DEEP LOG ANALYSIS</button>
+                        </section>
+                    </div>
+
+                    <!-- Lane 3: Security & Operations (col-logistics) -->
+                    <div class="col-logistics">
+                        <section class="rb-card"
+                            style="background: linear-gradient(135deg, rgba(0, 212, 180, 0.05), transparent);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                                <div
+                                    style="width: 45px; height: 45px; background: rgba(0, 212, 180, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                    📢</div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 18px;">System Broadcast</h3>
+                                    <p style="margin: 0; font-size: 12px; color: var(--text-muted);">Global announcement
+                                        layer</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div
+                                    style="padding: 15px; background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--rb-primary); border-radius: 4px 12px 12px 4px;">
+                                    <div style="font-size: 13px; font-weight: 700; color: white;">Module Synchronization
+                                    </div>
+                                    <p
+                                        style="font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.5;">
+                                        Academic registry update scheduled for Sunday. Expect brief latency in
+                                        enrollment processing.</p>
+                                </div>
+                                <div
+                                    style="padding: 15px; background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--rb-accent); border-radius: 4px 12px 12px 4px;">
+                                    <div style="font-size: 13px; font-weight: 700; color: white;">Global Expansion</div>
+                                    <p
+                                        style="font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.5;">
+                                        Platform capacity expanded to support 120 concurrent global learning nodes.</p>
+                                </div>
+                                <div
+                                    style="padding: 15px; background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--rb-primary); border-radius: 4px 12px 12px 4px;">
+                                    <div style="font-size: 13px; font-weight: 700; color: white;">Governance Audit</div>
+                                    <p
+                                        style="font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.5;">
+                                        All administrative protocol layers verified for current academic term.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="rb-card">
+                            <h3>Executive Functions</h3>
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Aggregating academy analytics...', 'info')">
+                                    <span style="font-size: 16px;">📊</span> Academy Performance Audit
+                                </button>
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Purging transient data...', 'warning')">
+                                    <span style="font-size: 16px;">🧹</span> Prune Transient Registry
+                                </button>
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Global integrity audit initiated...', 'success')">
+                                    <span style="font-size: 16px;">🛡️</span> Comprehensive Review
+                                </button>
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Core snapshot generated.', 'info')">
+                                    <span style="font-size: 16px;">💾</span> Registry Snapshot
+                                </button>
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Archiving academic logs...', 'info')">
+                                    <span style="font-size: 16px;">📚</span> Archive Module Records
+                                </button>
+                                <button class="quick-action-btn"
+                                    onclick="showToast('Optimizing module pathways...', 'warning')">
+                                    <span style="font-size: 16px;">📂</span> Calibrate Learning Paths
+                                </button>
+                                <button class="quick-action-btn" onclick="syncLocalData()">
+                                    <span style="font-size: 16px;">🔄</span> Global Sync Protocol
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management View -->
+            <div id="view-users" class="rb-view" style="display: none;">
+                <header class="rb-header">
+                    <h2>User <span class="highlight">Management</span></h2>
+                    <p>Global authority over system roles and account lifecycle.</p>
+                </header>
+                <section class="rb-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                        <h3>Global User List</h3>
+                        <button class="rb-btn" id="add-user-trigger" onclick="toggleAddUserForm()">+ Add New
+                            account</button>
+                    </div>
+
+                    <div class="user-mgmt-container">
+                        <div class="rb-table-container">
+                            <table class="rb-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th style="min-width: 200px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-table-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <aside class="user-add-panel" id="user-add-panel">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h4 style="margin: 0;">Add New Account</h4>
+                                <button onclick="toggleAddUserForm()"
+                                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px;">×</button>
+                            </div>
+                            <form id="add-user-form" onsubmit="handleAddNewUser(event)">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="new-user-name" class="form-input" placeholder="e.g. John Doe"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="new-user-email" class="form-input"
+                                        placeholder="e.g. john@culina.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Role</label>
+                                    <select id="new-user-role" class="form-input" style="appearance: none;">
+                                        <option value="Student">Student</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Manager">Manager</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select id="new-user-status" class="form-input" style="appearance: none;">
+                                        <option value="Active">Active</option>
+                                        <option value="Online">Online</option>
+                                        <option value="Offline">Offline</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="rb-btn" style="width: 100%; margin-top: 10px;">Add
+                                    Account</button>
+                            </form>
+                        </aside>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-courses" class="rb-view" style="display: none;">
+                <header class="rb-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <h2>Course <span class="highlight">Curriculum</span></h2>
+                            <p>Global monitor for module performance and enrollment metrics.</p>
+                        </div>
+                        <div id="header-capacity"
+                            style="font-size: 11px; font-weight: 800; color: var(--rb-primary); background: rgba(0,212,180,0.1); padding: 8px 16px; border-radius: 20px;">
+                            0 / 0 Slots Active
+                        </div>
+                    </div>
+                </header>
+                <div class="course-grid" id="course-list">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Audit Logs View -->
+            <div id="view-audit" class="rb-view" style="display: none;">
+                <header class="rb-header">
+                    <h2>Audit <span class="highlight" style="color: var(--rb-accent);">Archives</span></h2>
+                    <p style="color: var(--text-secondary);">Traceable history of all administrative actions.</p>
+                </header>
+                <section class="rb-card">
+                    <div class="rb-table-container">
+                        <table class="rb-table">
+                            <thead>
+                                <tr>
+                                    <th>Action Type</th>
+                                    <th>Operator</th>
+                                    <th>Timestamp</th>
+                                    <th>Contextual Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-body">
+                                <!-- Polulated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-config" class="rb-view" style="display: none;">
+                <header class="rb-header">
+                    <h2>Core <span class="highlight">Provisions</span></h2>
+                    <p>Orchestrate global limits and infrastructure protocols.</p>
+                </header>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
+                    <section class="rb-card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 18px;">Global Course Capacity</h3>
+                                <p style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Hard limit for
+                                    concurrent active modules.</p>
+                            </div>
+                            <div
+                                style="text-align: center; background: rgba(0,212,180,0.1); padding: 12px 20px; border-radius: 12px; min-width: 90px;">
+                                <div
+                                    style="font-size: 10px; color: var(--rb-primary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 2px;">
+                                    Current</div>
+                                <div style="font-size: 26px; font-weight: 900; color: white; line-height: 1;"
+                                    id="config-current-count">
+                                    0</div>
+                            </div>
+                        </div>
+                        <div class="rb-limit-control" style="display: flex; gap: 12px; align-items: center;">
+                            <input type="number" id="courseLimit" class="form-input" style="flex: 1; max-width: 120px;"
+                                min="1" max="50">
+                            <button class="rb-btn" onclick="updateLimit()" style="flex: 2;">Apply Protocol</button>
+                        </div>
+                        <div id="limit-status"
+                            style="font-size: 11px; font-weight: 800; margin-top: 15px; min-height: 15px;"></div>
+                    </section>
+                    <section class="rb-card" style="border-color: rgba(255, 77, 77, 0.2);">
+                        <h3 style="margin: 0; font-size: 18px; color: #ff4d4d;">Maintenance Mode</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0 25px;">Suspend public access
+                            layers for critical system updates.</p>
+                        <button class="rb-btn"
+                            style="background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.2); width: 100%;">Deactivate
+                            Public Access</button>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- EDIT COURSE MODAL -->
+        <div id="modal-edit-course" class="rb-modal">
+            <div class="modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="margin: 0; font-size: 24px;">Edit <span class="highlight">Course</span></h2>
+                    <button onclick="closeModal('modal-edit-course')"
+                        style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px;">×</button>
+                </div>
+                <form id="edit-course-form" onsubmit="handleEditCourse(event)">
+                    <input type="hidden" id="edit-course-id">
+                    <div class="form-group">
+                        <label>Course Title</label>
+                        <input type="text" id="edit-course-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Instructor</label>
+                        <input type="text" id="edit-course-instructor" class="form-input" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="edit-course-category" class="form-input">
+                                <option value="Professional">Professional</option>
+                                <option value="Technical">Technical</option>
+                                <option value="Culinary">Culinary</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Training">Training</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Student Count</label>
+                            <input type="number" id="edit-course-students" class="form-input" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="rb-btn" style="width: 100%; margin-top: 20px; height: 50px;">Save
+                        Protocols</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- EDIT USER MODAL -->
+        <div id="modal-edit-user" class="rb-modal">
+            <div class="modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="margin: 0; font-size: 24px;">Edit <span class="highlight">User</span></h2>
+                    <button onclick="closeModal('modal-edit-user')"
+                        style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px;">×</button>
+                </div>
+                <form id="edit-user-form" onsubmit="handleEditUser(event)">
+                    <input type="hidden" id="edit-user-id">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="edit-user-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="edit-user-email" class="form-input" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Position / Role</label>
+                            <select id="edit-user-role" class="form-input">
+                                <option value="Super Admin">Super Admin</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Staff">Staff</option>
+                                <option value="Student">Student</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>System Status</label>
+                            <select id="edit-user-status" class="form-input">
+                                <option value="Active">Active</option>
+                                <option value="Suspended">Suspended</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="rb-btn" style="width: 100%; margin-top: 20px; height: 50px;">Update
+                        User Registry</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ROSTER MODAL -->
+        <div id="modal-roster" class="rb-modal">
+            <div class="modal-content" style="max-width: 650px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 24px;">Course <span class="highlight">Roster</span></h2>
+                        <p id="roster-course-name" style="font-size: 13px; color: var(--text-muted); margin: 5px 0 0;">
+                        </p>
+                    </div>
+                    <button onclick="closeModal('modal-roster')"
+                        style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px;">×</button>
+                </div>
+                <div class="rb-table-container" style="max-height: 400px;">
+                    <table class="rb-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Enrollment status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roster-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="rb-btn" style="width: 100%; margin-top: 25px; opacity: 0.7;"
+                    onclick="closeModal('modal-roster')">Close Directory</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = checkAuth();
+            if (!user || user.position !== 'Super Admin') return;
+
+            // Load Initial Data
+            loadStats();
+            loadUsers();
+            loadAudit();
+
+            // Load Course Limit
+            const currentLimit = localStorage.getItem('cs_course_limit') || 12;
+            document.getElementById('courseLimit').value = currentLimit;
+        });
+
+        function switchView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.rb-view').forEach(v => v.style.display = 'none');
+            // Show target view
+            document.getElementById(`view-${viewName}`).style.display = 'block';
+
+            // Update top-nav button state
+            document.querySelectorAll('.view-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.color = 'var(--text-muted)';
+            });
+            const activeBtn = document.getElementById(`btn-${viewName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.color = 'white';
+            }
+
+            // Re-render data if needed
+            if (viewName === 'users') loadUsers();
+            if (viewName === 'courses') loadCourses();
+            if (viewName === 'audit') loadAudit();
+            if (viewName === 'overview') loadStats();
+        }
+
+        function loadStats() {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const limit = localStorage.getItem('cs_course_limit') || 12;
+            const users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+
+            document.getElementById('course-count').textContent = courses.length;
+            const limitDisplay = document.getElementById('course-limit-display');
+            if (limitDisplay) limitDisplay.textContent = limit;
+
+            document.getElementById('total-users').textContent = users.length;
+
+            // Load Dashboard Timeline
+            const timeline = document.getElementById('dashboard-timeline');
+            if (timeline) {
+                timeline.innerHTML = logs.slice(0, 5).map(log => `
+                    <div class="timeline-item">
+                        <div style="font-size: 11px; color: var(--rb-primary); font-weight: 800; text-transform: uppercase;">${log.action}</div>
+                        <div style="font-size: 13px; font-weight: 600; margin: 4px 0;">${log.details}</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">${log.timestamp}</div>
+                    </div>
+                `).join('') || '<div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center;">No recent activities logged.</div>';
+            }
+
+            // Sync System Config stats
+            const configCount = document.getElementById('config-current-count');
+            if (configCount) configCount.textContent = courses.length;
+
+            // Start Simulations
+            if (!window.simRunning) startDashboardSimulations();
+        }
+
+        function startDashboardSimulations() {
+            window.simRunning = true;
+            setInterval(() => {
+                const enroll = Math.floor(Math.random() * 8) + 12;
+                const grade = Math.floor(Math.random() * 5) + 75;
+                const speed = Math.floor(Math.random() * 3) + 10;
+                const completion = Math.floor(Math.random() * 4) + 82;
+
+                const enrollEl = document.getElementById('enroll-rate');
+                const gradeEl = document.getElementById('grade-avg');
+                const speedEl = document.getElementById('cert-speed');
+                const complEl = document.getElementById('completion-val');
+
+                if (enrollEl) enrollEl.textContent = `${enroll}%`;
+                if (gradeEl) gradeEl.textContent = `${grade}%`;
+                if (speedEl) speedEl.textContent = `${speed}d`;
+                if (complEl) complEl.textContent = `${completion}%`;
+
+                // Reach simulation
+                const reachEl = document.getElementById('reach-val');
+                if (reachEl && Math.random() > 0.8) reachEl.textContent = parseInt(reachEl.textContent) + 1;
+            }, 3000);
+        }
+
+        function loadCourses() {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const limit = localStorage.getItem('cs_course_limit') || 12;
+
+            const container = document.getElementById('course-list');
+            const headerCapacity = document.getElementById('header-capacity');
+            if (headerCapacity) headerCapacity.textContent = `${courses.length} / ${limit} Slots Active`;
+
+            container.innerHTML = courses.map(c => `
+                <div class="course-card">
+                    <img src="${c.image}" class="course-image" alt="${c.name}">
+                    <div class="course-content">
+                        <span class="course-category">${c.category}</span>
+                        <h3 class="course-title">${c.name}</h3>
+                        <div class="course-meta">
+                            <span class="course-instructor">
+                                <div class="instructor-avatar"></div>
+                                ${c.instructor}
+                            </span>
+                            <span class="student-count">👥 ${c.students} Students</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="rb-btn" onclick="openEditCourseModal(${c.id})" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(255,255,255,0.05); color: white;">Edit</button>
+                            <button class="rb-btn" onclick="openRosterModal(${c.id})" style="flex: 1; padding: 6px; font-size: 11px; background: rgba(0, 212, 180, 0.1); color: var(--rb-primary);">Roster</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- NEW COURSE MANAGEMENT FUNCTIONS ---
+
+        function openEditCourseModal(id) {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+
+            document.getElementById('edit-course-id').value = course.id;
+            document.getElementById('edit-course-name').value = course.name;
+            document.getElementById('edit-course-instructor').value = course.instructor;
+            document.getElementById('edit-course-category').value = course.category;
+            document.getElementById('edit-course-students').value = course.students;
+
+            document.getElementById('modal-edit-course').classList.add('active');
+        }
+
+        function handleEditCourse(event) {
+            event.preventDefault();
+            const id = parseInt(document.getElementById('edit-course-id').value);
+            const name = document.getElementById('edit-course-name').value;
+            const instructor = document.getElementById('edit-course-instructor').value;
+            const category = document.getElementById('edit-course-category').value;
+            const students = parseInt(document.getElementById('edit-course-students').value);
+
+            let courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const index = courses.findIndex(c => c.id === id);
+
+            if (index !== -1) {
+                courses[index] = { ...courses[index], name, instructor, category, students };
+                localStorage.setItem('cs_courses', JSON.stringify(courses));
+
+                // Log it
+                const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+                logs.unshift({
+                    id: Date.now(),
+                    action: 'Course Protocol Edit',
+                    user: 'Super Admin',
+                    timestamp: new Date().toLocaleString(),
+                    details: `Modified parameters for course: ${name}`
+                });
+                localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+                closeModal('modal-edit-course');
+                loadCourses();
+                loadStats();
+                if (typeof showToast === 'function') showToast(`Protocols saved for ${name}`, 'success');
+            }
+        }
+
+        function openRosterModal(id) {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+
+            document.getElementById('roster-course-name').textContent = course.name;
+
+            // Simulate roster using existing students in system
+            const users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const students = users.filter(u => u.role === 'Student').slice(0, 8); // Just show some students
+
+            const body = document.getElementById('roster-table-body');
+            if (students.length > 0) {
+                body.innerHTML = students.map(s => `
+                    <tr>
+                        <td style="padding: 15px 20px;"><strong>${s.name}</strong></td>
+                        <td style="padding: 15px 20px; color: var(--text-muted); font-size: 12px;">${s.email}</td>
+                        <td style="padding: 15px 20px;"><span class="badge" style="background: rgba(0,212,180,0.1); color: var(--rb-primary); font-size: 9px;">ENROLLED</span></td>
+                    </tr>
+                `).join('');
+            } else {
+                body.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 30px; color: var(--text-muted);">No student directory entries found.</td></tr>';
+            }
+
+            document.getElementById('modal-roster').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function updateLimit() {
+            const newLimit = parseInt(document.getElementById('courseLimit').value);
+            localStorage.setItem('cs_course_limit', newLimit);
+
+            // Sync Actual Courses
+            let courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const currentCount = courses.length;
+
+            if (newLimit > currentCount) {
+                // Add new placeholder courses
+                for (let i = currentCount; i < newLimit; i++) {
+                    courses.push({
+                        id: Date.now() + i,
+                        name: `New Course Slot ${i + 1}`,
+                        students: 0,
+                        instructor: 'Unassigned',
+                        category: 'Training',
+                        status: 'Active',
+                        image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80'
+                    });
+                }
+            } else if (newLimit < currentCount) {
+                // Remove excess courses
+                courses = courses.slice(0, newLimit);
+            }
+
+            localStorage.setItem('cs_courses', JSON.stringify(courses));
+
+            const status = document.getElementById('limit-status');
+            status.textContent = 'PROTOCOL UPDATED';
+            status.style.color = 'var(--rb-primary)';
+
+            // Log this action
+            const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+            logs.unshift({
+                id: Date.now(),
+                action: 'Course Sync Protocol',
+                user: 'Super Admin',
+                timestamp: new Date().toLocaleString(),
+                details: `System synced to ${newLimit} active courses`
+            });
+            localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+            // Refresh UI
+            loadStats();
+            if (document.getElementById('view-courses').style.display !== 'none') loadCourses();
+
+            setTimeout(() => status.textContent = '', 3000);
+            if (typeof showToast === 'function') showToast(`System synced to ${newLimit} courses`, 'success');
+        }
+
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+
+            const body = document.getElementById('user-table-body');
+            body.innerHTML = users.map(u => `
+                <tr style="animation: entry 0.5s ease backwards;">
+                    <td><strong>${u.name}</strong></td>
+                    <td style="color: var(--text-muted);">${u.email}</td>
+                    <td><span class="badge" style="background: rgba(123, 97, 255, 0.1); color: var(--rb-accent);">${u.role}</span></td>
+                    <td><span style="font-size: 10px; color: ${u.status === 'Suspended' ? 'var(--color-critical)' : (u.status === 'Online' || u.status === 'Active' ? 'var(--rb-primary)' : 'var(--text-muted)')};">● ${u.status}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="rb-btn" onclick="openEditUserModal(${u.id})" style="padding: 4px 10px; font-size: 10px; background: transparent; border: 1px solid var(--border-subtle); color: white;">Edit</button>
+                            <button class="rb-btn" onclick="suspendUser(${u.id})" style="padding: 4px 10px; font-size: 10px; background: transparent; border: 1px solid ${u.status === 'Suspended' ? 'var(--rb-primary)' : 'var(--rb-accent)'}; color: ${u.status === 'Suspended' ? 'var(--rb-primary)' : 'var(--rb-accent)'};">${u.status === 'Suspended' ? 'Activate' : 'Suspend'}</button>
+                            <button class="rb-btn" onclick="deleteUser(${u.id})" style="padding: 4px 10px; font-size: 10px; background: transparent; border: 1px solid var(--color-critical); color: var(--color-critical);">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openEditUserModal(id) {
+            const users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById('edit-user-id').value = user.id;
+            document.getElementById('edit-user-name').value = user.name;
+            document.getElementById('edit-user-email').value = user.email;
+            document.getElementById('edit-user-role').value = user.role;
+            document.getElementById('edit-user-status').value = user.status;
+
+            document.getElementById('modal-edit-user').classList.add('active');
+        }
+
+        function handleEditUser(event) {
+            event.preventDefault();
+            const id = parseInt(document.getElementById('edit-user-id').value);
+            const name = document.getElementById('edit-user-name').value;
+            const email = document.getElementById('edit-user-email').value;
+            const role = document.getElementById('edit-user-role').value;
+            const status = document.getElementById('edit-user-status').value;
+
+            let users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const index = users.findIndex(u => u.id === id);
+
+            if (index !== -1) {
+                users[index] = { ...users[index], name, email, role, status };
+                localStorage.setItem('cs_users', JSON.stringify(users));
+
+                // Log it
+                const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+                logs.unshift({
+                    id: Date.now(),
+                    action: 'User Registry Update',
+                    user: 'Super Admin',
+                    timestamp: new Date().toLocaleString(),
+                    details: `Updated info for user ${name} (${role})`
+                });
+                localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+                closeModal('modal-edit-user');
+                loadUsers();
+                if (typeof showToast === 'function') showToast(`Registry updated for ${name}`, 'success');
+            }
+        }
+
+        function suspendUser(id) {
+            let users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const index = users.findIndex(u => u.id === id);
+
+            if (index !== -1) {
+                const currentStatus = users[index].status;
+                const newStatus = currentStatus === 'Suspended' ? 'Active' : 'Suspended';
+                users[index].status = newStatus;
+
+                localStorage.setItem('cs_users', JSON.stringify(users));
+
+                // Log it
+                const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+                logs.unshift({
+                    id: Date.now(),
+                    action: newStatus === 'Suspended' ? 'Access Suspension' : 'Access Restored',
+                    user: 'Super Admin',
+                    timestamp: new Date().toLocaleString(),
+                    details: `${newStatus === 'Suspended' ? 'Suspended' : 'Activated'} account for ${users[index].name}`
+                });
+                localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+                loadUsers();
+                if (typeof showToast === 'function') showToast(`User ${newStatus === 'Suspended' ? 'Suspended' : 'Activated'}`, newStatus === 'Suspended' ? 'warning' : 'success');
+            }
+        }
+
+        function toggleAddUserForm() {
+            const panel = document.getElementById('user-add-panel');
+            const trigger = document.getElementById('add-user-trigger');
+            panel.classList.toggle('active');
+
+            if (panel.classList.contains('active')) {
+                trigger.style.opacity = '0.5';
+                trigger.style.pointerEvents = 'none';
+            } else {
+                trigger.style.opacity = '1';
+                trigger.style.pointerEvents = 'auto';
+            }
+        }
+
+        function handleAddNewUser(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('new-user-name').value;
+            const email = document.getElementById('new-user-email').value;
+            const role = document.getElementById('new-user-role').value;
+            const status = document.getElementById('new-user-status').value;
+
+            const users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                role,
+                status
+            };
+
+            users.unshift(newUser);
+            localStorage.setItem('cs_users', JSON.stringify(users));
+
+            // Log action
+            const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+            logs.unshift({
+                id: Date.now(),
+                action: 'User Created',
+                user: 'Super Admin',
+                timestamp: new Date().toLocaleString(),
+                details: `New ${role} account created for ${name}`
+            });
+            localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+            // Refresh UI
+            loadUsers();
+            toggleAddUserForm();
+            document.getElementById('add-user-form').reset();
+
+            if (typeof showToast === 'function') showToast(`Successfully created account for ${name}`, 'success');
+        }
+
+        function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            let users = JSON.parse(localStorage.getItem('cs_users') || '[]');
+            const userToDelete = users.find(u => u.id === id);
+            users = users.filter(u => u.id !== id);
+            localStorage.setItem('cs_users', JSON.stringify(users));
+
+            // Log action
+            const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+            logs.unshift({
+                id: Date.now(),
+                action: 'User Deleted',
+                user: 'Super Admin',
+                timestamp: new Date().toLocaleString(),
+                details: `Account for ${userToDelete.name} was removed`
+            });
+            localStorage.setItem('cs_audit_logs', JSON.stringify(logs));
+
+            loadUsers();
+            if (typeof showToast === 'function') showToast('User account deleted', 'warning');
+        }
+
+        function loadAudit() {
+            const logs = JSON.parse(localStorage.getItem('cs_audit_logs') || '[]');
+            const body = document.getElementById('audit-table-body');
+            body.innerHTML = logs.map(l => `
+                <tr>
+                    <td><span style="color: var(--rb-accent); font-weight: 700;">${l.action}</span></td>
+                    <td><div style="font-size: 12px; font-weight: 600;">${l.user}</div></td>
+                    <td style="font-size: 11px; color: var(--text-muted);">${l.timestamp}</td>
+                    <td style="font-size: 12px;">${l.details}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+
+</html>

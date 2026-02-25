@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script>
+    (function () {
+        try {
+            var user = JSON.parse(sessionStorage.getItem('cs_user') || localStorage.getItem('cs_user'));
+            var allowed = ['Super Admin', 'Admin', 'Manager', 'Staff', 'Student', 'Chef', 'Cashier'];
+            if (!user || !allowed.includes(user.position)) {
+                window.location.replace('../login.html');
+            }
+        } catch (e) {
+            window.location.replace('../login.html');
+        }
+    })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard — CULINA-SUITE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+    :root {
+        --rb-primary: #00d4b4;
+        --rb-primary-glow: rgba(0, 212, 180, 0.25);
+        --rb-secondary: #7b61ff;
+        --rb-secondary-glow: rgba(123, 97, 255, 0.25);
+        --rb-accent: #ffb800;
+        --rb-bg: #0d0f12;
+        --rb-surface: rgba(255, 255, 255, 0.03);
+        --rb-glass: rgba(255, 255, 255, 0.04);
+        --rb-glass-strong: rgba(255, 255, 255, 0.07);
+    }
+
+    body {
+        background: var(--rb-bg);
+        color: var(--text-primary);
+        min-height: 100vh;
+        background-image:
+            radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 212, 180, 0.06) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 40% at 80% 50%, rgba(123, 97, 255, 0.04) 0%, transparent 60%);
+    }
+
+    .rb-layout {
+        padding: var(--space-10) var(--space-6);
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* ── Premium Card System ── */
+    .rb-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: var(--space-8);
+        margin-bottom: var(--space-8);
+        overflow: hidden;
+        position: relative;
+        backdrop-filter: blur(12px) saturate(140%);
+        -webkit-backdrop-filter: blur(12px) saturate(140%);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .rb-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(0, 212, 180, 0.15), transparent 40%, transparent 60%, rgba(123, 97, 255, 0.1));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .rb-card:hover::before {
+        opacity: 1;
+    }
+
+    .rb-card:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 0 60px rgba(0, 212, 180, 0.04);
+        transform: translateY(-2px);
+    }
+
+    /* ── Buttons ── */
+    .rb-btn {
+        background: linear-gradient(135deg, var(--rb-primary), #00b89c);
+        color: var(--rb-bg);
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .rb-btn::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.15) 50%, transparent 70%);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .rb-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 25px var(--rb-primary-glow), 0 0 40px rgba(0, 212, 180, 0.1);
+    }
+
+    .rb-btn:hover::after {
+        transform: translateX(100%);
+    }
+
+    .rb-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    /* ── Sidebar Items ── */
+    .sidebar-item {
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.12);
+        transform: translateX(3px);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-item.clickable:hover {
+        border-color: var(--rb-primary);
+        background: rgba(0, 212, 180, 0.04);
+        box-shadow: 0 0 20px rgba(0, 212, 180, 0.08);
+    }
+
+    .sidebar-item .item-title {
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.3;
+    }
+
+    .sidebar-item .item-meta {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* ── Premium Poll Cards ── */
+    .poll-unit {
+        padding: 18px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .poll-unit:hover {
+        border-color: rgba(0, 212, 180, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .poll-option {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 0;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .poll-option:hover {
+        border-color: var(--rb-primary);
+        background: rgba(0, 212, 180, 0.06);
+        transform: translateX(4px);
+        box-shadow: 0 0 20px rgba(0, 212, 180, 0.06);
+    }
+
+    .poll-progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(0, 212, 180, 0.18), rgba(123, 97, 255, 0.08));
+        width: 0%;
+        transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+    }
+
+    /* ── FAQ Accordion Premium ── */
+    .faq-item {
+        transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .faq-trigger {
+        width: 100%;
+        padding: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .faq-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out;
+        color: var(--text-muted);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .faq-item.active .faq-content {
+        display: block !important;
+        max-height: 500px;
+        padding: 0 14px 14px 14px;
+    }
+
+    .faq-item.active .faq-icon {
+        transform: rotate(45deg);
+    }
+
+    .faq-icon {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        font-size: 20px;
+        color: var(--rb-primary);
+    }
+
+    /* ── Comment System ── */
+    .comment-box {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.025);
+        padding: 15px;
+        border-radius: 14px;
+        border-left: 3px solid var(--rb-secondary);
+        animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        backdrop-filter: blur(8px);
+    }
+
+    .form-input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: white;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        border-color: var(--rb-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 180, 0.1);
+        background: rgba(0, 0, 0, 0.5);
+        outline: none;
+    }
+
+    /* ── Cinematic Entrance Animations ── */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-25px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(25px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.92);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes glowPulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 15px rgba(0, 212, 180, 0.1);
+        }
+
+        50% {
+            box-shadow: 0 0 30px rgba(0, 212, 180, 0.2), 0 0 60px rgba(0, 212, 180, 0.05);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -200% center;
+        }
+
+        100% {
+            background-position: 200% center;
+        }
+    }
+
+    @keyframes borderGlow {
+
+        0%,
+        100% {
+            border-color: rgba(0, 212, 180, 0.15);
+        }
+
+        50% {
+            border-color: rgba(0, 212, 180, 0.35);
+        }
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    /* ── Staggered Page Load Animations ── */
+    .rb-layout>header {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .rb-stat-grid {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    }
+
+    .rb-stat-grid>.rb-card:nth-child(1) {
+        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    .rb-stat-grid>.rb-card:nth-child(2) {
+        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+
+    .rb-stat-grid>.rb-card:nth-child(3) {
+        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+    }
+
+    .rb-stat-grid>.rb-card:nth-child(4) {
+        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+    }
+
+    .rb-stat-grid>.rb-card:nth-child(5) {
+        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+    }
+
+    /* ── Scroll Reveal System ── */
+    .reveal {
+        opacity: 0;
+        transform: translateY(25px);
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .reveal-left {
+        opacity: 0;
+        transform: translateX(-25px);
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal-left.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .reveal-right {
+        opacity: 0;
+        transform: translateX(25px);
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal-right.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* ── Stat Card Hover Glow ── */
+    .rb-stat-grid .rb-card {
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .rb-stat-grid .rb-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 212, 180, 0.06);
+    }
+
+    /* ── Section Headers ── */
+    h2 {
+        background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* ── Discussion Drawer ── */
+    #discussion-drawer {
+        backdrop-filter: blur(20px) saturate(150%);
+        -webkit-backdrop-filter: blur(20px) saturate(150%);
+    }
+
+    /* ── Chat Button Float ── */
+    .rb-layout~.rb-btn[onclick*="toggleDiscussion"] {
+        animation: float 3s ease-in-out infinite;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 40px rgba(123, 97, 255, 0.15);
+    }
+
+    /* ── Progress Bar Animations ── */
+    [style*="background: var(--rb-primary)"][style*="height: 100%"],
+    [style*="background: var(--rb-secondary)"][style*="height: 100%"],
+    [style*="background: #ffb800"][style*="height: 100%"],
+    [style*="background: linear-gradient"][style*="height: 100%"] {
+        animation: progressGrow 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes progressGrow {
+        from {
+            width: 0% !important;
+        }
+    }
+
+    /* ── Highlight Shimmer ── */
+    .highlight {
+        background: linear-gradient(90deg, var(--rb-primary), var(--rb-secondary), var(--rb-primary));
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3s linear infinite;
+    }
+
+    /* ── Download Icon Animation ── */
+    .download-icon {
+        transition: all 0.3s ease !important;
+    }
+
+    .sidebar-item:hover .download-icon {
+        opacity: 1 !important;
+        transform: translateY(2px);
+        color: var(--rb-primary) !important;
+    }
+
+    /* ── Course Cards Premium Hover ── */
+    #course-grid .rb-card {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    #course-grid .rb-card:hover {
+        transform: translateY(-6px) scale(1.02) !important;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35), 0 0 40px rgba(0, 212, 180, 0.06) !important;
+        border-color: rgba(0, 212, 180, 0.2) !important;
+    }
+
+    /* ── Badge Glow ── */
+    .badge {
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        box-shadow: 0 0 15px rgba(0, 212, 180, 0.2);
+    }
+
+    /* ── Active Badge Pulse ── */
+    #poll-count {
+        animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    /* ── Scrollbar Styling ── */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 180, 0.3);
+    }
+
+    /* ── Tooltip on Stat Cards ── */
+    .rb-stat-grid .rb-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--rb-primary), transparent);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .rb-stat-grid .rb-card:hover::after {
+        opacity: 1;
+    }
+
+    /* ── Urgent Badge Pulse ── */
+    [style*="background: var(--color-critical)"] {
+        animation: borderGlow 2s ease-in-out infinite;
+    }
+
+    /* ── RESPONSIVE ENGINE ── */
+    @media (max-width: 1200px) {
+        .rb-layout {
+            padding: 30px 20px;
+        }
+
+        .rb-stat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .rb-layout>div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+        }
+
+        .rb-stat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        /* Reorder sidebar for mobile flow */
+        .rb-layout>div[style*="grid-template-columns"]>div:first-child {
+            order: 2;
+        }
+
+        .rb-layout>div[style*="grid-template-columns"]>div:last-child {
+            order: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 20px;
+        }
+
+        header>div:last-child {
+            width: 100%;
+            justify-content: space-between;
+            flex-direction: row-reverse;
+        }
+
+        .rb-stat-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        #active-lessons {
+            grid-template-columns: 1fr !important;
+        }
+
+        #course-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        #filter-chips {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            white-space: nowrap;
+            mask-image: linear-gradient(to right, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+        }
+
+        .badge {
+            flex-shrink: 0;
+        }
+
+        .rb-card[style*="display: flex; min-height: 180px"] {
+            flex-direction: column !important;
+            min-height: auto !important;
+        }
+
+        .rb-card[style*="display: flex; min-height: 180px"]>div:last-child {
+            display: none !important;
+            /* Hide hero image on mobile to save space */
+        }
+
+        div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+        }
+
+        #discussion-drawer {
+            width: 100% !important;
+            right: -100% !important;
+        }
+
+        .rb-btn[onclick*="toggleDiscussion"] {
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .rb-layout {
+            padding: 20px 15px;
+        }
+
+        #filter-chips {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+
+        #filter-chips .badge {
+            width: 100% !important;
+            text-align: center !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            font-size: 11px !important;
+        }
+
+        h1 {
+            font-size: 26px !important;
+        }
+
+        .rb-card {
+            padding: 15px;
+        }
+    }
+</style>
+</head>
+
+<body>
+    <div class="rb-layout" style="max-width: 1400px; padding: 40px 20px;">
+        <header style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <div
+                    style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--rb-primary); font-weight: 800; margin-bottom: 15px;">
+                    Academic Intelligence</div>
+                <h1 style="font-size: 32px; font-weight: 800;">Student <span class="highlight"
+                        style="color: var(--rb-primary);">Nexus</span></h1>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div style="text-align: right; margin-right: 15px;">
+                    <div style="font-size: 11px; color: var(--text-muted);">Institutional Credits</div>
+                    <div style="font-size: 18px; font-weight: 800; color: var(--rb-secondary);">48 / 120 Units</div>
+                    <div id="kitchen-timer"
+                        style="font-size: 10px; color: var(--rb-primary); font-weight: 800; font-family: monospace; display: block;">
+                        SESSION: 00:00:00</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="syncLocalData()" class="rb-btn"
+                        style="background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 8px 12px; font-size: 11px; border: 1px solid var(--border-subtle);">Sync
+                        Data</button>
+                    <a href="../login.html" onclick="sessionStorage.removeItem('cs_user')" class="rb-btn"
+                        style="background: var(--color-critical); color: white; padding: 8px 16px;">Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="rb-stat-grid"
+            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+            <!-- Stats via JS -->
+            <div id="weekly-goal-module" class="rb-card"
+                style="margin: 0; padding: 15px; display: flex; align-items: center; gap: 15px; grid-column: span 1;">
+                <!-- Goals Donut via JS -->
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 320px 1fr; gap: 30px; align-items: stretch;">
+            <!-- Left Sidebar: Achievements & Deadlines -->
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                <section class="rb-card" style="margin: 0; padding: 25px;">
+                    <h2
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        Achievements <span
+                            style="font-size: 10px; background: var(--rb-accent); color: black; padding: 2px 6px; border-radius: 4px; font-weight: 800;">4
+                            UNLOCKED</span></h2>
+                    <div id="achievements-list" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Achievements via JS -->
+                    </div>
+                </section>
+
+                <section class="rb-card" style="margin: 0; padding: 25px;">
+                    <h2 style="margin-bottom: 20px;">Module Velocity</h2>
+                    <div id="course-progress-list" style="display: flex; flex-direction: column; gap: 15px;">
+                        <!-- Progress via JS -->
+                    </div>
+                </section>
+
+                <section class="rb-card" style="margin: 0; padding: 20px;">
+                    <h2 style="margin-bottom: 15px;">Learning Pathway</h2>
+                    <div id="pathway-timeline" style="display: flex; flex-direction: column; gap: 0;">
+                        <!-- Timeline via JS -->
+                    </div>
+                </section>
+
+                <section class="rb-card" style="margin: 0; border-color: rgba(255,75,75,0.3); flex: 1;">
+                    <h2
+                        style="color: var(--color-critical); display: flex; justify-content: space-between; align-items: center;">
+                        Upcoming Deadlines <span
+                            style="font-size: 10px; background: var(--color-critical); color: white; padding: 2px 6px; border-radius: 4px;">URGENT</span>
+                    </h2>
+                    <div id="assignments-list"
+                        style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Assignments via JS -->
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;">
+                        <h2 style="margin-bottom: 20px; font-size: 16px;">Community Pulse</h2>
+                        <div id="activity-feed" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Activity via JS -->
+                        </div>
+                    </div>
+                    <!-- Enrichment: Academic Standing -->
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-weight: 800;">ACADEMIC VELOCITY</span>
+                            <span style="color: var(--rb-primary); font-weight: 800;">TOP 5%</span>
+                        </div>
+                        <div
+                            style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden;">
+                            <div style="width: 95%; height: 100%; background: var(--rb-primary);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Enrichment: Quick Stats -->
+                    <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-weight: 800;">PEER RANKING</span>
+                            <span style="color: var(--rb-secondary); font-weight: 800;">#12 / 340</span>
+                        </div>
+                        <div
+                            style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden;">
+                            <div style="width: 88%; height: 100%; background: var(--rb-secondary);"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-weight: 800;">ASSIGNMENT ACCURACY</span>
+                            <span style="color: #ffb800; font-weight: 800;">92%</span>
+                        </div>
+                        <div
+                            style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden;">
+                            <div style="width: 92%; height: 100%; background: #ffb800;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-weight: 800;">LAB PROFICIENCY</span>
+                            <span style="color: var(--rb-primary); font-weight: 800;">78%</span>
+                        </div>
+                        <div
+                            style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden;">
+                            <div
+                                style="width: 78%; height: 100%; background: linear-gradient(90deg, var(--rb-primary), var(--rb-secondary));">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-weight: 800;">ATTENDANCE RATE</span>
+                            <span style="color: var(--rb-primary); font-weight: 800;">97%</span>
+                        </div>
+                        <div
+                            style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden;">
+                            <div style="width: 97%; height: 100%; background: var(--rb-primary);"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Main Content: Courses & News -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <section class="rb-card"
+                    style="padding: 0; overflow: hidden; display: flex; min-height: 180px; position: relative;">
+                    <div style="flex: 1; padding: 25px; z-index: 2;">
+                        <h2 style="font-size: 24px;">Recommended for You</h2>
+                        <p style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Based on your interest in
+                            Molecular Arts.</p>
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button onclick="resumeCourse('Sous Vide 2.0')" class="rb-btn"
+                                style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; cursor: pointer; color: white;">
+                                <div
+                                    style="width: 30px; height: 30px; background: var(--rb-primary); border-radius: 50%; color: black; display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                                    S</div>
+                                <span style="font-size: 12px; font-weight: 700;">Resume: Sous Vide 2.0</span>
+                            </button>
+                            <button onclick="resumeCourse('Foraging Pro')" class="rb-btn"
+                                style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; cursor: pointer; color: white;">
+                                <div
+                                    style="width: 30px; height: 30px; background: var(--rb-secondary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                                    F</div>
+                                <span style="font-size: 12px; font-weight: 700;">Start: Foraging Pro</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div
+                        style="width: 40%; background: url('https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&q=80') center/cover; position: absolute; right: 0; top: 0; bottom: 0;">
+                    </div>
+                </section>
+
+                <section class="rb-card"
+                    style="margin: 0; padding: 25px; background: rgba(0,212,180,0.03); border-color: var(--rb-primary-glow);">
+                    <header
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="font-size: 20px;">Next Up: Active Lessons</h2>
+                            <p style="font-size: 12px; color: var(--text-muted);">Pick up where you left off today.</p>
+                        </div>
+                        <button class="rb-btn"
+                            style="padding: 8px 15px; font-size: 11px; background: var(--rb-bg); color: var(--rb-primary); border: 1px solid var(--rb-primary);">FULL
+                            SYLLABUS</button>
+                    </header>
+                    <div id="active-lessons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Active Lessons via JS -->
+                    </div>
+                </section>
+
+                <section class="rb-card" style="margin: 0;">
+                    <header style="margin-bottom: 25px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h2 id="catalog-title">Module <span class="highlight">Intelligence</span></h2>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="courseSearch" oninput="filterCourses()"
+                                    placeholder="Search title or chef..." class="form-input"
+                                    style="width: 200px; margin: 0; padding: 8px 15px; font-size: 13px;">
+                            </div>
+                        </div>
+                        <div id="filter-chips" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="badge active" onclick="setCategory('All', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px;">All</button>
+                            <button class="badge" onclick="setCategory('Foundation', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Foundation</button>
+                            <button class="badge" onclick="setCategory('Technique', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Technique</button>
+                            <button class="badge" onclick="setCategory('Innovation', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Innovation</button>
+                            <button class="badge" onclick="setCategory('Cultural', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Cultural</button>
+                            <button class="badge" onclick="setCategory('Beverage', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Beverage</button>
+                            <button class="badge" onclick="setCategory('Theory', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Theory</button>
+                            <button class="badge" onclick="setCategory('Management', this)"
+                                style="border: none; cursor: pointer; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05);">Management</button>
+                        </div>
+                    </header>
+                    <div id="course-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px;">
+                        <!-- Courses via JS -->
+                    </div>
+                </section>
+
+
+                <!-- NEW: Learning Hub (Side-by-Side News & Calendar) -->
+                <!-- NEW: Learning Hub (Side-by-Side News & Calendar) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; align-items: stretch; flex: 1;">
+                    <section class="rb-card" style="margin: 0; padding: 22px; display: flex; flex-direction: column;">
+                        <header
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 18px;">Nexus News</h2>
+                            <span style="font-size: 10px; color: var(--rb-primary); font-weight: 800; cursor: pointer;"
+                                onclick="showToast('Loading full archive...', 'info')">VIEW ALL</span>
+                        </header>
+                        <div id="news-feed" style="display: flex; flex-direction: column; gap: 15px; flex: 1;">
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Institute</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">2 mins ago</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">New Campus Opening in
+                                    Paris</div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    We are excited to announce our newest culinary lab in the heart of France.</div>
+                            </div>
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Scholarship</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">1 hour ago</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">Fulbright Gastronomy
+                                    Grants Open</div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    Apply now for full funding for International Technique exchanges.</div>
+                            </div>
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Announcement</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">5 hours ago</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">System Maintenance: Mar
+                                    01</div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    The portal will be offline for 2 hours on Sunday for performance updates.</div>
+                            </div>
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Innovation</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">Yesterday</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">AI in Culinary Arts
+                                </div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    Exploring how generative models are rewriting the future of recipe development.
+                                </div>
+                            </div>
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Event</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">1 day ago</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">Global Chef Summit 2026
+                                </div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    Register for the annual gathering of the world's most innovative culinary minds.
+                                </div>
+                            </div>
+                            <div onclick="showToast('Redirecting to full article...', 'info')"
+                                style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 5px; cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span
+                                        style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">Career</span>
+                                    <span style="font-size: 10px; color: var(--text-muted);">2 days ago</span>
+                                </div>
+                                <div style="font-size: 13px; font-weight: 700; margin-top: 5px;">Michelin Star
+                                    Internships</div>
+                                <div
+                                    style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">
+                                    New partnerships signed with 3-star restaurants for the 2026 cohort.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <section class="rb-card"
+                            style="margin: 0; padding: 22px; background: linear-gradient(135deg, rgba(123,97,255,0.05), rgba(0,212,180,0.05)); border-color: rgba(123,97,255,0.2);">
+                            <h2 style="font-size: 18px; margin-bottom: 20px;">Skills Nexus</h2>
+                            <div id="skills-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <!-- Skills via JS -->
+                            </div>
+                        </section>
+
+                        <section class="rb-card"
+                            style="margin: 0; padding: 22px; border-left: 4px solid var(--rb-secondary); flex: 1;">
+                            <h2 style="font-size: 18px; margin-bottom: 20px;">Academic Calendar</h2>
+                            <div id="calendar-feed" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Events via JS -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Interactive Row (Polls & FAQs) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px;">
+                    <section class="rb-card" style="margin: 0; padding: 22px;">
+                        <header
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 18px;">Pulse Polls</h2>
+                            <span id="poll-count" class="badge"
+                                style="background: var(--rb-secondary); color: white;">ACTIVE:
+                                0</span>
+                        </header>
+                        <div id="poll-stack" style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- Polls via JS -->
+                        </div>
+                    </section>
+
+                    <section class="rb-card"
+                        style="margin: 0; padding: 22px; border-left: 4px solid var(--rb-primary);">
+                        <header
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 18px;">Nexus FAQ</h2>
+                            <span style="font-size: 10px; color: var(--rb-primary); font-weight: 800; cursor: pointer;"
+                                onclick="showToast('Opening help center...', 'info')">HELP CENTER</span>
+                        </header>
+                        <div id="faq-accordion" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- FAQs via JS -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Academic Discussion Modal/Drawer Concept -->
+    <button onclick="toggleDiscussion()" class="rb-btn"
+        style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 24px; padding: 0; z-index: 1001; display: flex; align-items: center; justify-content: center; background: var(--rb-accent);">💬</button>
+
+    <!-- Management Modal -->
+    <div id="manage-course-modal" class="rb-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+        <div class="modal-content"
+            style="background: rgba(26, 30, 46, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; width: 100%; max-width: 500px; padding: 40px; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); animation: scaleIn 0.4s ease;">
+            <button class="close-modal" onclick="closeModal('manage-course-modal')"
+                style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
+            <h2 style="font-size: 24px; margin-bottom: 25px;">Manage <span class="highlight">Course</span></h2>
+            <form id="edit-course-form" onsubmit="handleUpdateCourse(event)">
+                <input type="hidden" id="edit-course-id">
+                <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Course
+                        Name</label>
+                    <input type="text" id="edit-course-name" class="form-input" required
+                        style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: white; outline: none;">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <label
+                        style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Instructor</label>
+                    <input type="text" id="edit-course-instructor" class="form-input" required
+                        style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: white; outline: none;">
+                </div>
+                <button type="submit" class="rb-btn" style="width: 100%; height: 50px; margin-top: 10px;">Save
+                    Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="discussion-drawer"
+        style="position: fixed; right: -400px; top: 0; bottom: 0; width: 380px; background: var(--rb-bg); border-left: 1px solid var(--border-strong); z-index: 1000; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding: 30px; display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2>Community Hub</h2>
+            <button onclick="toggleDiscussion()"
+                style="background: none; border: none; color: white; cursor: pointer; font-size: 20px;">✕</button>
+        </div>
+        <div id="comments-container" style="flex: 1; display: flex; flex-direction: column;">
+            <div id="comment-feed" style="flex: 1; overflow-y: auto; padding-right: 15px; margin-bottom: 20px;">
+                <!-- Comments via JS -->
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <textarea id="commentInput" class="form-input"
+                    style="height: 45px; margin: 0; background: rgba(0,0,0,0.3);"
+                    placeholder="Say something..."></textarea>
+                <button class="rb-btn" style="background: var(--rb-secondary); color: white;"
+                    onclick="postComment()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        let currentCategory = 'All';
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAuth()) return;
+            // Always ensure data exists
+            if (!localStorage.getItem('cs_courses') || JSON.parse(localStorage.getItem('cs_courses')).length !== 6) {
+                initRBAC();
+            }
+            loadDashboard();
+
+            // ── Scroll Reveal System ──
+            initScrollReveal();
+        });
+
+        function toggleDiscussion() {
+            const dr = document.getElementById('discussion-drawer');
+            dr.style.right = (dr.style.right === '0px' || dr.style.right === '') ? '-400px' : '0px';
+        }
+
+        function emergencyReset() {
+            if (confirm('This will refresh all institute data and load the 35+ course catalog. Proceed?')) {
+                localStorage.clear();
+                initRBAC();
+                location.reload();
+            }
+        }
+
+        function setCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('#filter-chips button').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.color = 'white';
+            });
+            el.classList.add('active');
+            el.style.background = 'var(--rb-primary)';
+            el.style.color = 'var(--rb-bg)';
+            filterCourses();
+        }
+
+        function filterCourses() {
+            searchQuery = document.getElementById('courseSearch').value.toLowerCase();
+            const allCourses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+
+            const filtered = allCourses.filter(c => {
+                const matchesCat = currentCategory === 'All' || c.category === currentCategory;
+                const matchesSearch = c.name.toLowerCase().includes(searchQuery) ||
+                    c.instructor.toLowerCase().includes(searchQuery);
+                return matchesCat && matchesSearch;
+            });
+
+            renderCourseGrid(filtered);
+            document.getElementById('catalog-title').textContent = `Course Catalog (${filtered.length})`;
+        }
+
+        function loadDashboard() {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+
+            // Stats (Dynamic)
+            const activeCount = courses.length; // Sync with total slots
+            const streak = Math.floor(Math.random() * 20) + 5;
+            const limit = localStorage.getItem('cs_course_limit') || 12;
+            document.querySelector('.rb-stat-grid').innerHTML = `
+                <div class="rb-card" onclick="document.getElementById('catalog-title').scrollIntoView({ behavior: 'smooth' })" style="margin: 0; padding: 18px; display: flex; align-items: center; gap: 15px; cursor: pointer;">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0,212,180,0.1); color: var(--rb-primary); display: flex; align-items: center; justify-content: center; font-size: 20px;">🎓</div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800;">${activeCount} <span style="font-size: 14px; color: var(--text-muted); font-weight: 400;">/ ${limit}</span></div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Module Enrollment</div>
+                    </div>
+                </div>
+                <div class="rb-card" style="margin: 0; padding: 18px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(123,97,255,0.1); color: var(--rb-secondary); display: flex; align-items: center; justify-content: center; font-size: 20px;">📜</div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800;">8</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Certifications</div>
+                    </div>
+                </div>
+                <div class="rb-card" style="margin: 0; padding: 18px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,184,0,0.1); color: #ffb800; display: flex; align-items: center; justify-content: center; font-size: 20px;">⚡</div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800;">142h</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Execution Time</div>
+                    </div>
+                </div>
+                <div class="rb-card" style="margin: 0; padding: 18px; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,75,75,0.1); color: var(--color-critical); display: flex; align-items: center; justify-content: center; font-size: 20px;">🔥</div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800;">${streak} Day</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Cognitive Streak</div>
+                    </div>
+                </div>
+            `;
+
+            renderGoalsDonut();
+            renderPathway();
+            renderSkills();
+            renderActiveLessons();
+            renderCalendar();
+            renderCourseProgress();
+            renderActivityFeed();
+            startKitchenTimer();
+
+            // Achievements
+            let ach = JSON.parse(localStorage.getItem('cs_achievements') || '[]');
+            if (ach.length === 0) {
+                ach = [
+                    { title: 'Early Adopter', desc: 'Joined the Nexus in Beta', icon: '🚀' },
+                    { title: 'Computational Chef', desc: 'Completed 5 Technique modules', icon: '💻' },
+                    { title: 'Fast Learner', desc: '7-day cognitive streak', icon: '🔥' },
+                    { title: 'Scholar', desc: 'Passed all theory assessments', icon: '📖' }
+                ];
+                localStorage.setItem('cs_achievements', JSON.stringify(ach));
+            }
+            document.getElementById('achievements-list').innerHTML = ach.map(a => `
+                <div onclick="showAchievement('${a.title}')" style="display: flex; gap: 12px; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer;">
+                    <div style="font-size: 18px;">${a.icon}</div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 700;">${a.title}</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">${a.desc}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Assignments
+            const ass = JSON.parse(localStorage.getItem('cs_assignments') || '[]');
+            document.getElementById('assignments-list').innerHTML = ass.map(a => `
+                <div onclick="showToast('Loading submission portal...', 'info')" style="padding: 12px; background: rgba(255,184,0,0.05); border-left: 3px solid var(--rb-primary); border-radius: 4px; cursor: pointer;">
+                    <div style="font-size: 13px; font-weight: 700;">${a.title}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">${a.course}</div>
+                    <div style="font-size: 10px; color: var(--rb-primary); font-weight: 800; margin-top: 8px;">DUE: ${a.due}</div>
+                </div>
+            `).join('');
+
+            // News
+            let news = JSON.parse(localStorage.getItem('cs_news') || '[]');
+            if (news.length === 0) {
+                news = [
+                    { type: 'Institute', date: '2 mins ago', title: 'New Campus Opening in Paris', excerpt: 'We are excited to announce our newest culinary lab in the heart of France.' },
+                    { type: 'Scholarship', date: '1 hour ago', title: 'Fulbright Gastronomy Grants Open', excerpt: 'Apply now for full funding for International Technique exchanges.' },
+                    { type: 'Announcement', date: '5 hours ago', title: 'System Maintenance: Mar 01', excerpt: 'The portal will be offline for 2 hours on Sunday for performance updates.' },
+                    { type: 'Innovation', date: 'Yesterday', title: 'AI in Culinary Arts', excerpt: 'Exploring how generative models are rewriting the future of recipe development.' },
+                    { type: 'Event', date: '1 day ago', title: 'Global Chef Summit 2026', excerpt: 'Register for the annual gathering of the world\'s most innovative culinary minds.' },
+                    { type: 'Career', date: '2 days ago', title: 'Michelin Star Internships', excerpt: 'New partnerships signed with 3-star restaurants for the 2026 cohort.' }
+                ];
+                localStorage.setItem('cs_news', JSON.stringify(news));
+            }
+
+            if (news.length > 0) {
+                document.getElementById('news-feed').innerHTML = news.map(n => `
+                    <div onclick="showToast('Redirecting to full article...', 'info')" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 12px; cursor: pointer;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase;">${n.type}</span>
+                            <span style="font-size: 10px; color: var(--text-muted);">${n.date}</span>
+                        </div>
+                        <div style="font-size: 13px; font-weight: 700; margin-top: 5px; color: white;">${n.title}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">${n.excerpt}</div>
+                    </div>
+                `).join('');
+            }
+
+            // Interactive Modules
+            const polls = JSON.parse(localStorage.getItem('cs_polls') || '[]');
+            renderPolls(polls);
+            renderFAQs();
+
+            filterCourses();
+            loadComments();
+        }
+
+        function renderCourseGrid(list) {
+            const grid = document.getElementById('course-grid');
+            if (!grid) return;
+
+            // Set grid to align items at the start to prevent vertical stretching
+            grid.style.alignItems = 'start';
+            grid.style.minHeight = '600px';
+
+            if (list.length === 0) {
+                grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 60px;">No exact matches found. Try broadening your criteria.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(c => `
+                <div class="rb-card" style="padding: 0; margin: 0; background: rgba(255,255,255,0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-color: rgba(255,255,255,0.05); overflow: hidden; display: flex; flex-direction: column; height: 340px; width: 100%;">
+                    <div style="height: 150px; background: url('${c.image || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80'}') center/cover; flex-shrink: 0;"></div>
+                    <div style="padding: 18px; display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 10px; font-weight: 800; color: ${c.status === 'Active' ? 'var(--rb-primary)' : 'var(--rb-secondary)'}; text-transform: uppercase;">${c.status}</span>
+                            <button onclick="event.stopPropagation(); openManageModal(${c.id})" style="background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase;">Manage</button>
+                        </div>
+                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">${c.category || 'TRAINING'}</div>
+                        <div style="font-weight: 800; font-size: 16px; margin: 2px 0; line-height: 1.2; color: white;">${c.name}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">${c.instructor}</div>
+                        <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 10px;">
+                            <div style="font-size: 11px; color: #ffb800;">⭐ 4.9</div>
+                            <button onclick="event.stopPropagation(); openCourseDetails('${c.name}')" class="rb-btn" style="padding: 10px 18px; font-size: 11px;">Enroll / Resume</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resumeCourse(name) {
+            showToast(`Loading: ${name}...`, 'success');
+        }
+
+        function showAchievement(title) {
+            showToast(`Achievement Details: ${title}`, 'success');
+        }
+
+        function openCourseDetails(name) {
+            showToast(`Opening course: ${name}`, 'info');
+        }
+
+        function renderPolls(polls) {
+            const container = document.getElementById('poll-stack');
+            const activePolls = polls.filter(p => p.active).slice(0, 2);
+            container.innerHTML = activePolls.map((p, pIdx) => {
+                const total = p.votes.reduce((a, b) => a + b, 0);
+                return `
+                    <div class="poll-unit">
+                        <div style="font-weight: 700; font-size: 13px; margin-bottom: 12px; color: var(--text-primary);">${p.question}</div>
+                        <div style="display: flex; flex-direction:column; gap: 8px;">
+                            ${p.options.map((opt, i) => {
+                    const pct = Math.round((p.votes[i] / (total || 1)) * 100);
+                    return `
+                                    <div class="poll-option" onclick="castVote(${pIdx}, ${i})" id="poll-${pIdx}-opt-${i}" style="padding: 10px 14px; margin-bottom: 0; border-radius: 8px;">
+                                        <div class="poll-progress" style="width: 0%" id="bar-${pIdx}-${i}"></div>
+                                        <div style="position: relative; z-index: 1; display:flex; justify-content:space-between; font-size: 11px; font-weight: 600; width: 100%; align-items: center;">
+                                            <span>${opt}</span>
+                                            <span class="pct-val" style="display:none; color: var(--rb-primary);">${pct}%</span>
+                                        </div>
+                                    </div>
+                                `;
+                }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('poll-count').textContent = `ACTIVE: ${activePolls.length}`;
+        }
+
+        function renderFAQs() {
+            const faqs = JSON.parse(localStorage.getItem('cs_faqs') || '[]');
+            const container = document.getElementById('faq-accordion');
+            if (!container) return;
+
+            container.innerHTML = faqs.map((f, i) => `
+                <div class="faq-item" style="background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden;">
+                    <button onclick="const ans = this.nextElementSibling; const icon = this.querySelector('.faq-icon'); if(ans.style.maxHeight){ans.style.maxHeight = null; icon.innerText='+'; icon.style.transform='rotate(0deg)';} else {ans.style.maxHeight = ans.scrollHeight + 'px'; icon.innerText='−'; icon.style.transform='rotate(180deg)';}" 
+                        style="width: 100%; padding: 12px 15px; background: none; border: none; color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; text-align: left;">
+                        <span>${f.question}</span>
+                        <span class="faq-icon" style="transition: transform 0.3s ease; font-size: 18px; color: var(--rb-primary);">+</span>
+                    </button>
+                    <div class="faq-answer" style="padding: 0 15px; max-height: 0; overflow: hidden; transition: all 0.3s ease; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        <div style="padding-bottom: 12px;">${f.answer}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function castVote(pollIdx, optIdx) {
+            const polls = JSON.parse(localStorage.getItem('cs_polls') || '[]');
+            const activePolls = polls.filter(p => p.active);
+            if (!activePolls[pollIdx]) return;
+            activePolls[pollIdx].votes[optIdx]++;
+            localStorage.setItem('cs_polls', JSON.stringify(polls));
+
+            const p = activePolls[pollIdx];
+            const total = p.votes.reduce((a, b) => a + b, 0);
+            p.options.forEach((_, i) => {
+                const pct = Math.round((p.votes[i] / total) * 100);
+                const bar = document.getElementById(`bar-${pollIdx}-${i}`);
+                if (bar) {
+                    bar.style.width = pct + '%';
+                    const parent = bar.parentElement;
+                    parent.querySelector('.pct-val').style.display = 'block';
+                    parent.style.pointerEvents = 'none';
+                    parent.style.opacity = i === optIdx ? '1' : '0.6';
+                    if (i === optIdx) parent.style.borderColor = 'var(--rb-primary)';
+                }
+            });
+            showToast('Insight captured. Thank you!', 'success');
+        }
+
+        function loadComments() {
+            const comments = JSON.parse(localStorage.getItem('cs_comments') || '[]').reverse();
+            const feed = document.getElementById('comment-feed');
+            const approvedComments = comments.filter(c => c.status === 'approved');
+            feed.innerHTML = approvedComments.map(c => `
+                <div class="comment-box" style="padding: 12px; margin-bottom: 12px; border-left-color: ${c.role === 'Staff' ? 'var(--rb-primary)' : 'var(--rb-secondary)'}">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: ${c.role === 'Staff' ? 'var(--rb-primary)' : 'var(--rb-secondary)'};">${c.user ? c.user[0] : 'U'}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 12px;">${c.user || 'User'} <span style="font-weight: 400; color: var(--text-muted); font-size: 10px;">• ${c.role || 'Student'}</span></div>
+                        <div style="font-size: 13px; margin-top: 4px; color: var(--text-muted); line-height: 1.4;">${c.text}</div>
+                    </div>
+                </div>
+             `).join('');
+        }
+
+        function renderPathway() {
+            const pathway = JSON.parse(localStorage.getItem('cs_pathway') || '[]');
+            const container = document.getElementById('pathway-timeline');
+            if (!container) return;
+
+            container.innerHTML = pathway.map((p, i) => `
+                <div style="display: flex; gap: 15px; position: relative; padding-bottom: 20px;">
+                    ${i < pathway.length - 1 ? `<div style="position: absolute; left: 7px; top: 15px; bottom: -5px; width: 2px; background: rgba(255,255,255,0.05);"></div>` : ''}
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: ${p.status === 'completed' ? 'var(--rb-primary)' : p.status === 'in-progress' ? 'var(--rb-secondary)' : 'rgba(255,255,255,0.1)'}; border: 4px solid var(--rb-bg); z-index: 2; margin-top: 2px;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 800; color: ${p.status === 'locked' ? 'var(--text-muted)' : 'white'}">${p.title}</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">${p.date} • <span style="text-transform: capitalize; color: ${p.status === 'completed' ? 'var(--rb-primary)' : 'inherit'}">${p.status.replace('-', ' ')}</span></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSkills() {
+            const skills = JSON.parse(localStorage.getItem('cs_skills') || '[]');
+            const container = document.getElementById('skills-grid');
+            if (!container) return;
+
+            container.innerHTML = skills.map(s => `
+                <div class="sidebar-item" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px;">
+                    <div class="item-meta" style="color: var(--rb-secondary); font-weight: 800; text-transform: uppercase;">${s.type}</div>
+                    <div class="item-title" style="font-size: 12px;">${s.name}</div>
+                    <div style="font-size: 10px; color: var(--rb-primary); font-weight: 800; margin-top: 2px;">${s.trend} ↑</div>
+                </div>
+            `).join('');
+        }
+
+        function renderSpotlight() {
+            const s = JSON.parse(localStorage.getItem('cs_spotlight') || '{}');
+            const container = document.getElementById('chef-spotlight');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="height: 120px; background: url('${s.image}') center/cover;"></div>
+                <div style="padding: 20px;">
+                    <div style="font-size: 9px; font-weight: 800; color: var(--rb-primary); text-transform: uppercase; letter-spacing: 1px;">Chef Spotlight</div>
+                    <div style="font-size: 16px; font-weight: 800; margin-top: 5px;">${s.name}</div>
+                    <div style="font-size: 11px; color: var(--rb-secondary); font-weight: 700;">${s.title}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px; line-height: 1.4;">"${s.quote}"</div>
+                </div>
+            `;
+        }
+
+        function renderGoalsDonut() {
+            const container = document.getElementById('weekly-goal-module');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(var(--rb-primary) 0deg 270deg, rgba(255,255,255,0.05) 270deg 360deg); display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--rb-bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--rb-primary);">75%</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Weekly Goal</div>
+                    <div style="font-size: 16px; font-weight: 800;">14.5 / 20h</div>
+                </div>
+            `;
+        }
+
+        function renderWorkshops() {
+            const workshops = JSON.parse(localStorage.getItem('cs_workshops') || '[]');
+            const container = document.getElementById('workshop-list');
+            if (!container) return;
+
+            container.innerHTML = workshops.map(w => `
+                <div class="sidebar-item clickable">
+                    <div style="flex: 1;">
+                        <div class="item-title">${w.title}</div>
+                        <div class="item-meta">${w.date} • ${w.time} • ${w.chef}</div>
+                    </div>
+                    <span style="font-size: 9px; background: ${w.type === 'Live' ? 'var(--rb-primary)' : 'rgba(255,255,255,0.08)'}; color: ${w.type === 'Live' ? 'black' : 'var(--text-secondary)'}; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${w.type}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderResources() {
+            const resources = JSON.parse(localStorage.getItem('cs_resources') || '[]');
+            const container = document.getElementById('resource-list');
+            if (!container) return;
+
+            container.innerHTML = resources.map(r => `
+                <div class="sidebar-item clickable" onclick="showToast('Downloading ${r.title}...', 'info')">
+                    <div style="font-size: 18px; width: 32px; height: 32px; background: rgba(255,255,255,0.03); border-radius: 8px; display: flex; align-items: center; justify-content: center;">${r.icon}</div>
+                    <div style="flex: 1;">
+                        <div class="item-title">${r.title}</div>
+                        <div class="item-meta">${r.type} • ${r.size}</div>
+                    </div>
+                    <span style="color: var(--rb-primary); font-size: 14px; font-weight: 800; opacity: 0; transition: opacity 0.2s ease;" class="download-icon">↓</span>
+                </div>
+            `).join('');
+        }
+
+        function renderActiveLessons() {
+            const container = document.getElementById('active-lessons');
+            if (!container) return;
+
+            const mockLessons = [
+                { course: 'Sauce Science', lesson: 'Velouté Fundamentals', type: 'Lecture', progress: 45, icon: '📔' },
+                { course: 'Knife Mastery', lesson: 'The Tourné Cut', type: 'Lab', progress: 90, icon: '🔪' }
+            ];
+
+            container.innerHTML = mockLessons.map(l => `
+                <div class="rb-card" style="margin: 0; padding: 15px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 24px;">${l.icon}</span>
+                        <span style="font-size: 9px; background: var(--rb-secondary); padding: 3px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800;">${l.type}</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 10px; color: var(--rb-primary); font-weight: 800;">${l.course}</div>
+                        <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${l.lesson}</div>
+                    </div>
+                    <div style="margin-top: 5px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); margin-bottom: 5px;">
+                            <span>Progress</span>
+                            <span>${l.progress}%</span>
+                        </div>
+                        <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
+                            <div style="width: ${l.progress}%; height: 100%; background: var(--rb-primary);"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-feed');
+            if (!container) return;
+
+            const events = [
+                { date: '24', month: 'FEB', title: 'Mid-term Assessment', type: 'Exam' },
+                { date: '28', month: 'FEB', title: 'Group Lab Submission', type: 'Project' },
+                { date: '05', month: 'MAR', title: 'Paris Campus Visit', type: 'Event' },
+                { date: '12', month: 'MAR', title: 'Culinary AI Workshop', type: 'Lab' },
+                { date: '18', month: 'MAR', title: 'Michelin Star Seminar', type: 'Career' }
+            ];
+
+            container.innerHTML = events.map(e => `
+                <div class="sidebar-item">
+                    <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.04); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle); flex-shrink: 0;">
+                        <div style="font-size: 15px; font-weight: 800; line-height: 1;">${e.date}</div>
+                        <div style="font-size: 9px; font-weight: 800; color: var(--rb-primary); margin-top: 2px;">${e.month}</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="item-title">${e.title}</div>
+                        <div class="item-meta">${e.type}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCourseProgress() {
+            const container = document.getElementById('course-progress-list');
+            if (!container) return;
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const mockProgress = [85, 42, 65, 12, 18, 95];
+
+            container.innerHTML = courses.map((c, i) => `
+                <div style="margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
+                        <span style="font-size: 11px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px;">${c.name}</span>
+                        <span style="font-size: 10px; font-weight: 800; color: var(--rb-primary); flex-shrink: 0;">${mockProgress[i]}%</span>
+                    </div>
+                    <div style="height: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="width: ${mockProgress[i]}%; height: 100%; background: linear-gradient(90deg, var(--rb-primary), var(--rb-secondary)); border-radius: 10px; transition: width 0.8s ease-out;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderActivityFeed() {
+            const container = document.getElementById('activity-feed');
+            if (!container) return;
+            const activities = [
+                { user: 'Bianca', action: 'earned Master Sourdough badge', time: '2m ago', icon: '🏆' },
+                { user: 'Mario', action: 'published Knife Care notes', time: '15m ago', icon: '📝' },
+                { user: 'Kenji', action: 'completed Sushi Foundation', time: '1h ago', icon: '✅' },
+                { user: 'Elena', action: 'joined Wine Masterclass', time: '3h ago', icon: '🍷' },
+                { user: 'Hans', action: 'uploaded Butchery lab results', time: '4h ago', icon: '📊' },
+                { user: 'Priya', action: 'submitted Pastry Portfolio', time: '5h ago', icon: '🎨' },
+                { user: 'Rahul', action: 'scored 98% on Searing Quiz', time: '6h ago', icon: '🔥' },
+                { user: 'Sneha', action: 'reviewed Farm-to-Table lecture', time: '8h ago', icon: '🌱' },
+                { user: 'Roberto', action: 'started Fermentation deep-dive', time: '10h ago', icon: '🧪' },
+                { user: 'Meera', action: 'bookmarked Sous Vide 2.0', time: '12h ago', icon: '📌' }
+            ];
+
+            container.innerHTML = activities.map(a => `
+                <div class="sidebar-item" style="padding: 12px; border-color: rgba(255,255,255,0.03); align-items: center;">
+                    <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.03); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">${a.icon}</div>
+                    <div style="flex: 1; margin-left: 4px;">
+                        <div style="font-size: 11px; color: white; line-height: 1.3;"><strong>${a.user}</strong> ${a.action}</div>
+                        <div style="font-size: 9px; color: var(--text-muted); margin-top: 1px;">${a.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startKitchenTimer() {
+            let seconds = 0;
+            const timerEl = document.getElementById('kitchen-timer');
+            if (!timerEl) return;
+            setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function postComment() {
+            const text = document.getElementById('commentInput').value;
+            if (!text) return;
+            const user = getUser();
+            const comments = JSON.parse(localStorage.getItem('cs_comments') || '[]');
+            comments.push({ id: Date.now(), user: user.name.split(' ')[0], text, status: 'approved', role: user.position });
+            localStorage.setItem('cs_comments', JSON.stringify(comments));
+            document.getElementById('commentInput').value = '';
+            loadComments();
+            showToast('Comment posted in Hub.', 'success');
+        }
+        // ── Scroll Reveal Engine ──
+        function initScrollReveal() {
+            // Apply reveal classes to major sections
+            const mainGrid = document.querySelector('.rb-layout > div[style*="grid-template-columns"]');
+            if (mainGrid) {
+                const sidebar = mainGrid.children[0];
+                const mainContent = mainGrid.children[1];
+
+                // Sidebar cards animate from left
+                if (sidebar) {
+                    sidebar.querySelectorAll(':scope > section.rb-card, :scope > .rb-card').forEach((card, i) => {
+                        card.classList.add('reveal-left');
+                        card.style.transitionDelay = `${i * 0.1}s`;
+                    });
+                }
+
+                // Main content cards animate from right
+                if (mainContent) {
+                    mainContent.querySelectorAll(':scope > section.rb-card, :scope > .rb-card').forEach((card, i) => {
+                        card.classList.add('reveal-right');
+                        card.style.transitionDelay = `${i * 0.12}s`;
+                    });
+                }
+            }
+
+            // Polls & FAQs row
+            const pollFaqRow = document.querySelector('[style*="grid-template-columns: 1fr 1fr"]');
+            if (pollFaqRow) {
+                pollFaqRow.querySelectorAll(':scope > section.rb-card').forEach((card, i) => {
+                    card.classList.add('reveal');
+                    card.style.transitionDelay = `${i * 0.15}s`;
+                });
+            }
+
+            // Learning Hub and other standalone sections
+            document.querySelectorAll('.rb-layout > section.rb-card, .rb-layout > div > section.rb-card').forEach(card => {
+                if (!card.classList.contains('reveal') && !card.classList.contains('reveal-left') && !card.classList.contains('reveal-right')) {
+                    card.classList.add('reveal');
+                }
+            });
+
+            // Create the observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+            // Observe all reveal elements
+            document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // ── Particle Background (subtle ambient effect) ──
+        (function initParticles() {
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.3;';
+            document.body.prepend(canvas);
+            const ctx = canvas.getContext('2d');
+            let w, h, particles = [];
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < 35; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    r: Math.random() * 1.5 + 0.5,
+                    color: Math.random() > 0.5 ? 'rgba(0,212,180,' : 'rgba(123,97,255,'
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h;
+                    if (p.y > h) p.y = 0;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + '0.4)';
+                    ctx.fill();
+                });
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(0,212,180,${0.06 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // --- Management Logic ---
+        function openManageModal(id) {
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+
+            document.getElementById('edit-course-id').value = course.id;
+            document.getElementById('edit-course-name').value = course.name;
+            document.getElementById('edit-course-instructor').value = course.instructor;
+
+            const modal = document.getElementById('manage-course-modal');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function handleUpdateCourse(event) {
+            event.preventDefault();
+            const id = parseInt(document.getElementById('edit-course-id').value);
+            const courses = JSON.parse(localStorage.getItem('cs_courses') || '[]');
+            const index = courses.findIndex(c => c.id === id);
+
+            if (index !== -1) {
+                courses[index].name = document.getElementById('edit-course-name').value;
+                courses[index].instructor = document.getElementById('edit-course-instructor').value;
+
+                localStorage.setItem('cs_courses', JSON.stringify(courses));
+                filterCourses(); // Refresh catalog
+                closeModal('manage-course-modal');
+                showToast('Course parameters synchronized.', 'success');
+            }
+        }
+    </script>
+</body>
+
+</html>
